@@ -12,7 +12,7 @@ services:
       - searxng
     ports:
       - "49004:8080"
-     cap_drop:
+    cap_drop:
       - ALL
     cap_add:
       - CHOWN
