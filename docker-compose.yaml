@@ -48,5 +48,5 @@ services:
     volumes:
       - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/data/db/valkey:/data"
     
-  networks:
-    searxng:
+networks:
+  searxng:
