@@ -44,9 +44,9 @@ services:
         max-size: "1m"
         max-file: "1"
 
-volumes:
-  - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/config/searngx:/etc/searxng:rw"
-  - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/data/db/valkey:/data"
-
+  volumes:
+    - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/data/db/valkey:/data"
+    - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/config/searngx:/etc/searxng:rw"
+    
   networks:
     searxng:
