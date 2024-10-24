@@ -12,9 +12,7 @@ services:
       - searxng
     ports:
       - "49004:8080"
-    volumes:
-      - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/config/searngx:/etc/searxng:rw"
-    cap_drop:
+     cap_drop:
       - ALL
     cap_add:
       - CHOWN
@@ -34,8 +32,6 @@ services:
     hostname: redis
     networks:
       - searxng
-    volumes:
-      - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/data/db/valkey:/data"
     cap_drop:
       - ALL
     cap_add:
@@ -47,6 +43,10 @@ services:
       options:
         max-size: "1m"
         max-file: "1"
-        
+
+volumes:
+  - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/config/searngx:/etc/searxng:rw"
+  - "/var/lib/srv/$USER/docker/casjaysdevdocker/searngx/data/db/valkey:/data"
+
   networks:
     searxng:
