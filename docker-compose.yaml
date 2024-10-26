@@ -1,9 +1,9 @@
 services:
   searxng:
     environment:
-      - SEARXNG_BASE_URL="${SEARXNG_BASE_URL:-http://host.docker.internal:49004/}" 
       - UWSGI_WORKERS=4
       - UWSGI_THREADS=4
+      - SEARXNG_BASE_URL="${SEARXNG_BASE_URL:-http://host.docker.internal:49004/}" 
     container_name: searxng-searxng-latest
     image: docker.io/searxng/searxng:latest
     restart: always
