@@ -1,0 +1,110 @@
+# nginx proxy address - http://172.17.0.1:59089
+
+
+name: searxng
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  app:
+    image: docker.io/searxng/searxng:latest
+    container_name: searxng-app
+    hostname: search
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      # SearXNG Configuration
+      SEARXNG_BASE_URL: https://${BASE_HOST_NAME:-search.local}
+      SEARXNG_SECRET_KEY: ${SECRET_KEY:-change_me_in_production}
+      UWSGI_WORKERS: ${UWSGI_WORKERS:-4}
+      UWSGI_THREADS: ${UWSGI_THREADS:-4}
+      UWSGI_BUFFER_SIZE: 32768
+      UWSGI_HARAKIRI: 60
+      REDIS_HOST: searxng-valkey
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      SEARXNG_DEBUG: ${SEARXNG_DEBUG:-false}
+      SEARXNG_INSTANCE_NAME: ${SEARXNG_INSTANCE_NAME:-SearXNG}
+      SEARXNG_SAFE_SEARCH: ${SEARXNG_SAFE_SEARCH:-2}
+      SEARXNG_AUTOCOMPLETE: ${SEARXNG_AUTOCOMPLETE:-duckduckgo}
+      SEARXNG_LIMITER: ${SEARXNG_LIMITER:-true}
+      SEARXNG_IMAGE_PROXY: ${SEARXNG_IMAGE_PROXY:-true}
+      SEARXNG_PUBLIC_INSTANCE: ${SEARXNG_PUBLIC_INSTANCE:-false}
+      SEARXNG_REQUEST_TIMEOUT: ${SEARXNG_REQUEST_TIMEOUT:-3.0}
+      SEARXNG_ENABLE_HTTP2: ${SEARXNG_ENABLE_HTTP2:-true}
+    ports:
+      - '172.17.0.1:59089:8080'
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,nodev,rw,size=100m
+    volumes:
+      - './rootfs/config/searngx:/etc/searxng'
+    depends_on:
+      valkey:
+        condition: service_healthy
+    networks:
+      - searxng
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  valkey:
+    image: docker.io/valkey/valkey:8-alpine
+    container_name: searxng-valkey
+    hostname: valkey
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    command: >
+      valkey-server
+      --save 30 1
+      --maxmemory ${VALKEY_MAXMEMORY:-256mb}
+      --maxmemory-policy allkeys-lru
+      --loglevel warning
+      --tcp-keepalive 60
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - CHOWN
+    volumes:
+      - './rootfs/db/valkey:/data'
+    networks:
+      - searxng
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    sysctls:
+      net.core.somaxconn: '511'
+
+networks:
+  searxng:
+    name: searxng
+    external: false
