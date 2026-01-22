@@ -87,7 +87,7 @@ services:
       - DAC_OVERRIDE
       - CHOWN
     volumes:
-      - './rootfs/db/valkey:/data'
+      - './rootfs/data/db/valkey:/data'
     networks:
       - searxng
     healthcheck:
