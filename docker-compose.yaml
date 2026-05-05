@@ -49,7 +49,7 @@ services:
     tmpfs:
       - /tmp:noexec,nosuid,nodev,rw,size=100m
     volumes:
-      - './rootfs/config/searngx:/etc/searxng'
+      - './volumes/config/searngx:/etc/searxng'
     depends_on:
       valkey:
         condition: service_healthy
@@ -87,7 +87,7 @@ services:
       - DAC_OVERRIDE
       - CHOWN
     volumes:
-      - './rootfs/data/db/valkey:/data'
+      - './volumes/data/db/valkey:/data'
     networks:
       - searxng
     healthcheck:
