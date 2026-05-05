@@ -56,8 +56,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/searngx` - Data storage
-- `./rootfs/data/db/valkey` - Data storage
+- `./volumes/config/searngx` - Data storage
+- `./volumes/data/db/valkey` - Data storage
 
 ## 🔐 Security
 
