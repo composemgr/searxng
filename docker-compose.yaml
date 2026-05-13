@@ -1,6 +1,5 @@
 # nginx proxy address - http://172.17.0.1:59089
 
-
 name: searxng
 
 x-logging: &default-logging
@@ -13,14 +12,14 @@ services:
   app:
     image: docker.io/searxng/searxng:latest
     container_name: searxng-app
-    hostname: search
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
     restart: always
     pull_policy: always
     logging: *default-logging
     environment:
       # SearXNG Configuration
-      SEARXNG_BASE_URL: https://${BASE_HOST_NAME:-search.local}
-      SEARXNG_SECRET_KEY: ${SECRET_KEY:-change_me_in_production}
+      SEARXNG_BASE_URL: https://${BASE_HOST_NAME:-$HOSTNAME}.${BASE_DOMAIN_NAME:-example.com}
+      SEARXNG_SECRET_KEY: ${APP_SECRET_KEY:-changeme_secret_key_min_32_chars}
       UWSGI_WORKERS: ${UWSGI_WORKERS:-4}
       UWSGI_THREADS: ${UWSGI_THREADS:-4}
       UWSGI_BUFFER_SIZE: 32768
@@ -49,7 +48,7 @@ services:
     tmpfs:
       - /tmp:noexec,nosuid,nodev,rw,size=100m
     volumes:
-      - './volumes/config/searngx:/etc/searxng'
+      - './volumes/config/searxng:/etc/searxng'
     depends_on:
       valkey:
         condition: service_healthy
@@ -61,16 +60,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   valkey:
     image: docker.io/valkey/valkey:8-alpine
     container_name: searxng-valkey
-    hostname: valkey
+    hostname: searxng-valkey
     restart: always
     pull_policy: always
     logging: *default-logging
@@ -96,11 +90,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "5m"
-        max-file: "2"
     sysctls:
       net.core.somaxconn: '511'
 
