@@ -36,6 +36,8 @@ services:
       SEARXNG_PUBLIC_INSTANCE: ${SEARXNG_PUBLIC_INSTANCE:-false}
       SEARXNG_REQUEST_TIMEOUT: ${SEARXNG_REQUEST_TIMEOUT:-3.0}
       SEARXNG_ENABLE_HTTP2: ${SEARXNG_ENABLE_HTTP2:-true}
+      CONTAINER_NAME: searxng-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     ports:
       - '172.17.0.1:59089:8080'
     cap_drop:
@@ -54,12 +56,30 @@ services:
         condition: service_healthy
     networks:
       - searxng
+      - proxy
+      - cloudflare
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://searxng-app:8080'
+      - 'cloudflare.hostname=searxng.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.searxng-app.entrypoints=http'
+      - 'traefik.http.routers.searxng-app-secure.tls=true'
+      - 'traefik.http.routers.searxng-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.searxng-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.searxng-app.middlewares=searxng-app-https-redirect'
+      - 'traefik.http.routers.searxng-app-secure.entrypoints=https'
+      - 'traefik.http.routers.searxng-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.searxng-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.searxng-app-secure.service=searxng-app'
+      - 'traefik.http.services.searxng-app.loadbalancer.server.port=8080'
 
   valkey:
     image: docker.io/valkey/valkey:8-alpine
@@ -80,6 +100,8 @@ services:
       - SETUID
       - DAC_OVERRIDE
       - CHOWN
+    environment:
+      CONTAINER_NAME: searxng-valkey
     volumes:
       - './volumes/data/db/valkey:/data'
     networks:
@@ -97,3 +119,7 @@ networks:
   searxng:
     name: searxng
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
